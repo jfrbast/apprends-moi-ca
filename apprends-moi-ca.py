@@ -1,18 +1,51 @@
 from tkinter import *
 import requests
 from deep_translator import GoogleTranslator
+import datetime
+
+import sqlite3
+
+###-------------- DATABASE SETUP --------------###
+
+#conn = sqlite3.connect('DataBase.db')
+#curseur = conn.cursor()
+
+#curseur.execute("""CREATE TABLE IF NOT EXISTS questions (
+#    id integer primary key autoincrement,
+#    questionfr text,
+#    questionen text,
+#    correct_answerfr text,
+#    correct_answeren text,
+#    date_liste text,
+#    amount integer
+#)""")
+
+#conn.close()
+
+
+####-------------- DATABASE SETUP --------------###
+
+
+
 
 # -- Global variables to store the correct answers
 correct_answer_fr = ""
 correct_answer_en = ""
+question_id = ""
+question_en = ""
+question_fr = ""
+
 
 
 # -- Function to fetch questions from the trivia API and display them
 
 
 def get_questions(nb_questions):
+    global question_en
+    global question_fr
     global correct_answer_en
     global correct_answer_fr
+    global question_id
     url = "https://the-trivia-api.com/v2/questions"
     difficulty = difficulty_var.get()
     print("Selected difficulty:", difficulty)
@@ -27,6 +60,8 @@ def get_questions(nb_questions):
         for q in questions:
             question_en = q['question']
             correct_answer_en = q['correctAnswer']
+            question_id = q['id']
+
 
             correct_answer_en = correct_answer_en.lower()
             question_clear = str(question_en).strip()
@@ -64,15 +99,55 @@ def get_questions(nb_questions):
 def check_answer(event=None):
     user_answer = entry_answer.get().strip().lower()
     if user_answer == correct_answer_fr or user_answer == correct_answer_en:
-        label_result.config(text=" Correct answer!")
+        label_result.config(text=f" Correct answer!( {correct_answer_en} / {correct_answer_fr} )")
     else:
         label_result.config(text=f" Wrong! The correct answer was: {correct_answer_en} / {correct_answer_fr}")
 
+
+    datelist = datetime.datetime.today()
+
+    if question_exists(question_id) == False:
+        conn = sqlite3.connect('DataBase.db')
+        curseur = conn.cursor()
+        curseur.execute(
+            "INSERT INTO questions (id, questionfr, questionen, correct_answerfr, correct_answeren, date_liste, amount) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (question_id, question_fr, question_en, correct_answer_fr, correct_answer_en, datelist.strftime("%Y-%m-%d"),
+             1)
+        )
+        conn.commit()
+        conn.close()
+    else:
+        datelist_str = datetime.datetime.today().strftime("%Y-%m-%d")
+        conn = sqlite3.connect('DataBase.db')
+        curseur = conn.cursor()
+
+        curseur.execute("SELECT date_liste FROM questions WHERE id = ?", (question_id,))
+        current_dates = curseur.fetchone()[0]
+
+        dates = current_dates.split('||') if current_dates else []
+        if datelist_str not in dates:
+            dates.append(datelist_str)
+        new_dates = '||'.join(dates)
+        curseur.execute(
+            "UPDATE questions SET amount = amount + 1, date_liste = ? WHERE id = ?",
+            (new_dates, question_id)
+        )
+        conn.commit()
+        conn.close()
+
+
+    entry_answer.pack_forget()
     submit_button.config(text="Return to menu", command=return_to_menu)
 
 
-# -- Function to return to the main menu and reset the interface
 
+def question_exists(question_id):
+    conn = sqlite3.connect('DataBase.db')
+    curseur = conn.cursor()
+    curseur.execute("SELECT 1 FROM questions WHERE id = ?", (question_id,))
+    exists = curseur.fetchone() is not None
+    conn.close()
+    return exists
 
 def return_to_menu():
     label_question.pack_forget()
@@ -83,8 +158,6 @@ def return_to_menu():
 
     menu_frame.pack(pady=10)
 
-
-# -- Main application setup
 
 
 window = Tk()
@@ -121,5 +194,3 @@ start_button.pack(pady=10)
 submit_button.pack_forget()
 
 window.mainloop()
-
-

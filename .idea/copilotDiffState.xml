@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/ChatBox.tsx">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/ChatBox.tsx" />
+              <option name="updatedContent" value="// ...existing code...&#10;const [inputVisible, setInputVisible] = useState(true);&#10;// ...existing code...&#10;const handleSend = () =&gt; {&#10;    // ...existing code pour envoyer la réponse...&#10;    setInputVisible(false); // Masquer le champ après envoi&#10;};&#10;// ...existing code...&#10;{inputVisible &amp;&amp; (&#10;    &lt;input&#10;        // ...props du champ d'entrée...&#10;    /&gt;&#10;)}&#10;// ...existing code...&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
