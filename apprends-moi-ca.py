@@ -2,43 +2,14 @@ from tkinter import *
 import requests
 from deep_translator import GoogleTranslator
 import datetime
-
 import sqlite3
 
-###-------------- DATABASE SETUP --------------###
-
-#conn = sqlite3.connect('DataBase.db')
-#curseur = conn.cursor()
-
-#curseur.execute("""CREATE TABLE IF NOT EXISTS questions (
-#    id integer primary key autoincrement,
-#    questionfr text,
-#    questionen text,
-#    correct_answerfr text,
-#    correct_answeren text,
-#    date_liste text,
-#    amount integer
-#)""")
-
-#conn.close()
-
-
-####-------------- DATABASE SETUP --------------###
-
-
-
-
-# -- Global variables to store the correct answers
+# -- Variables globales pour stocker les réponses correctes
 correct_answer_fr = ""
 correct_answer_en = ""
 question_id = ""
 question_en = ""
 question_fr = ""
-
-
-
-# -- Function to fetch questions from the trivia API and display them
-
 
 def get_questions(nb_questions):
     global question_en
@@ -48,7 +19,7 @@ def get_questions(nb_questions):
     global question_id
     url = "https://the-trivia-api.com/v2/questions"
     difficulty = difficulty_var.get()
-    print("Selected difficulty:", difficulty)
+
     params = {
         "limit": nb_questions,
         "difficulty": difficulty,
@@ -61,7 +32,6 @@ def get_questions(nb_questions):
             question_en = q['question']
             correct_answer_en = q['correctAnswer']
             question_id = q['id']
-
 
             correct_answer_en = correct_answer_en.lower()
             question_clear = str(question_en).strip()
@@ -79,30 +49,25 @@ def get_questions(nb_questions):
 
             entry_answer.delete(0, END)
             label_result.config(text="")
-            entry_answer.pack(pady=5)
+            entry_answer.pack(pady=10)
 
-            submit_button.config(text="Validate", command=check_answer)
-            submit_button.pack(pady=10)
+            submit_button.config(text="Valider", command=check_answer)
+            submit_button.pack(pady=15)
 
             menu_frame.pack_forget()
-            label_question.pack()
-            label_question_fr.pack()
-            label_result.pack()
+            label_question.pack(pady=10)
+            label_question_fr.pack(pady=10)
+            label_result.pack(pady=10)
     else:
         print(f"Error fetching questions: {response.status_code}")
         print(response.text)
 
-
-# -- Function to check the user's answer and provide feedback
-
-
 def check_answer(event=None):
     user_answer = entry_answer.get().strip().lower()
     if user_answer == correct_answer_fr or user_answer == correct_answer_en:
-        label_result.config(text=f" Correct answer!( {correct_answer_en} / {correct_answer_fr} )")
+        label_result.config(text=f"✅ Bonne réponse ! ({correct_answer_en} / {correct_answer_fr})", fg="#4F996D")
     else:
-        label_result.config(text=f" Wrong! The correct answer was: {correct_answer_en} / {correct_answer_fr}")
-
+        label_result.config(text=f"❌ Mauvaise réponse ! La bonne réponse était : {correct_answer_en} / {correct_answer_fr}", fg="#EE2449")
 
     datelist = datetime.datetime.today()
 
@@ -135,11 +100,8 @@ def check_answer(event=None):
         conn.commit()
         conn.close()
 
-
     entry_answer.pack_forget()
-    submit_button.config(text="Return to menu", command=return_to_menu)
-
-
+    submit_button.config(text="Retour au menu", command=return_to_menu)
 
 def question_exists(question_id):
     conn = sqlite3.connect('DataBase.db')
@@ -155,41 +117,44 @@ def return_to_menu():
     entry_answer.pack_forget()
     label_result.config(text="")
     submit_button.pack_forget()
+    menu_frame.pack(pady=20)
 
-    menu_frame.pack(pady=10)
-
-
-
+# --- Interface graphique stylée ---
 window = Tk()
-window.title("Teach me that!")
-window.minsize(300, 200)
+window.title("Apprends-moi ça !")
+window.minsize(400, 300)
+window.configure(bg="#242321")
 
-label_question = Label(window, text="", wraplength=400, font=("Arial", 14))
-label_question_fr = Label(window, text="", wraplength=400, font=("Arial", 14))
+label_question = Label(window, text="", wraplength=400, font=("Arial", 15, "bold"), bg="#242321", fg="#FFFAE8")
 
-entry_answer = Entry(window, font=("Arial", 12))
+label_question_fr = Label(window, text="", wraplength=400, font=("Arial", 15, "bold"), bg="#242321", fg="#B8CBD0")
+
+entry_answer = Entry(window, font=("Arial", 13), bg="#e3f2fd", fg="#1a237e", relief=GROOVE, bd=2, justify="center")
 entry_answer.bind("<Return>", check_answer)
 
-label_result = Label(window, text="", font=("Arial", 12))
+label_result = Label(window, text="", font=("Arial", 13, "bold"), bg="#242321")
 
-submit_button = Button(window)
+submit_button = Button(window, font=("Arial", 12, "bold"), bg="#4F996D", fg="white", activebackground="#2E714A", activeforeground="white", relief=RAISED, bd=3, cursor="hand2")
 
-menu_frame = Frame(window)
-menu_frame.pack(pady=10)
+menu_frame = Frame(window, bg="#242321")
+menu_frame.pack(pady=20)
 
 difficulty_var = StringVar()
 difficulty_var.set("easy")
 
-radio1 = Radiobutton(menu_frame, text="Easy", variable=difficulty_var, value="easy")
-radio2 = Radiobutton(menu_frame, text="Medium", variable=difficulty_var, value="medium")
-radio3 = Radiobutton(menu_frame, text="Hard", variable=difficulty_var, value="hard")
+Label(menu_frame, text="Bienvenue dans Apprends-moi ça !", font=("Arial", 18, "bold"), bg="#242321", fg="#FFFAE8").pack(pady=10)
+Label(menu_frame, text="Choisis la difficulté :", font=("Arial", 14, "bold"), bg="#242321", fg="#C9C1B4").pack(pady=10)
 
-radio1.pack()
-radio2.pack()
-radio3.pack()
+radio1 = Radiobutton(menu_frame, text="Facile", variable=difficulty_var, value="easy", font=("Arial", 12), bg="#242321", fg="#4F996D", selectcolor="#000000", activebackground="#242321")
+radio2 = Radiobutton(menu_frame, text="Moyen", variable=difficulty_var, value="medium", font=("Arial", 12), bg="#242321", fg="#fbc02d", selectcolor="#000000", activebackground="#242321")
+radio3 = Radiobutton(menu_frame, text="Difficile", variable=difficulty_var, value="hard", font=("Arial", 12), bg="#242321", fg="#9F0328", selectcolor="#000000", activebackground="#242321")
 
-start_button = Button(menu_frame, text="Teach me that!", width=20, height=2, command=lambda: get_questions(1))
-start_button.pack(pady=10)
+radio1.pack(pady=2)
+radio2.pack(pady=2)
+radio3.pack(pady=2)
+
+start_button = Button(menu_frame, text="Apprends-moi ça !", width=22, height=2, font=("Arial", 13, "bold"), bg="#4F996D", fg="white", activebackground="#2E714A", activeforeground="white", relief=RAISED, bd=3, cursor="hand2", command=lambda: get_questions(1))
+start_button.pack(pady=15)
 
 submit_button.pack_forget()
 
